@@ -1,0 +1,17 @@
+- name: VPC facts
+  ec2_vpc_net_facts:
+    filters:
+      "tag:Name": "{{ vpc_name }}"
+  register: vpc_facts
+  
+- name: "set fact: VPC ID"
+  set_fact:
+    vpc_id: "{{ vpc_facts.vpcs[0].id }}"
+
+- name: create VPC security groups
+  ec2_group:
+    name: "{{ item.name }}"
+    description: "{{ item.desc }}"
+    vpc_id: "{{ vpc_id }}"
+    rules: "{{ item.rules }}"
+  loop: "{{ vpc_security_groups }}"
