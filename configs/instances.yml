@@ -1,0 +1,3 @@
+ec2_instances:
+  - { hostname: dockernode01, spec: "{{ docker_node_env_spec}}" }
+  - { hostname: haproxy, spec: "{{ proxy_spec}}" }

@@ -15,6 +15,7 @@
   ec2_vpc_subnet:
     region: "{{ aws_region }}"
     state: present
+    az: "{{ aws_az }}"
     vpc_id: "{{ vpc_result.vpc.id }}"
     cidr: "{{ vpc_subnets.public_cidr }}"
     map_public: true
@@ -26,6 +27,7 @@
   ec2_vpc_subnet:
     region: "{{ aws_region }}"
     state: present
+    az: "{{ aws_az }}"
     vpc_id: "{{ vpc_result.vpc.id }}"
     cidr: "{{ vpc_subnets.private_cidr }}"
     map_public: true

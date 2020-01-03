@@ -1,0 +1,28 @@
+---
+
+- name: Spinup {{instance.hostname}}
+  ec2:
+   region: "{{aws_region}}"
+   aws_access_key:   "{{ aws_access_key }}"
+   aws_secret_key:   "{{ aws_secret_key }}"
+   image: "{{ instance.spec.AmiId }}"
+   instance_type: "{{ instance.spec.InstanceType }}"
+   tenancy: "{{ VpcInstanceTenancy }}"
+   key_name: "{{ instance_key }}"
+   source_dest_check: "{{ instance_source_destination_check }}"
+   vpc_subnet_id: "{{ instance.spec.SubnetId }}"
+   group_id: "{{ instance.spec.SecurityGroups }}"
+   instance_tags: "{{ instance.spec.Tags|combine({'Name':instance.hostname}) }}"
+   count_tag: "{{ {'Name':instance.hostname} }}"
+   exact_count: "{{ instance.spec.ExactCount }}"
+   assign_public_ip: no
+   volumes: "{{ instance.spec.InstanceVolumes[0].VolumeSpecifications }}"
+   wait: yes
+  register: created_instance
+
+- name: Associate provided elastic IP
+  ec2_eip:
+    public_ip: "{{ instance.spec.public_ip }}"
+    region: "{{aws_region}}"
+    device_id: "{{created_instance.tagged_instances.0.id}}"
+  when: instance.spec.public_ip is defined

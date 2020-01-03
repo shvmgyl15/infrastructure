@@ -1,0 +1,3 @@
+available_amis:
+  hardened_ami: "ami-003316f3d1b4e1035"
+  docker_node_ami: "ami-003316f3d1b4e1035"
