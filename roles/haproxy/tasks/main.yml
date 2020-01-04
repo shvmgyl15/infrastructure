@@ -2,7 +2,6 @@
 # tasks file for haproxy
 - include: proxy.yml
   with_items:
-    - "{'proxy_type': 'private', 'target_server_type': 'private'}"
-    - "{'proxy_type': 'public', 'target_server_type': 'public'}"
+     - "{'proxy_type': 'public', 'target_server_type': 'private'}"
   vars:
     - config: "{{ item }}"
