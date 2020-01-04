@@ -1,0 +1,93 @@
+---
+- name: Install epel-release
+  yum: name=epel-release state=present
+
+- name: Install pip
+  yum: name=python-pip state=present
+
+- name: Install aws-cli
+  pip: name=awscli state=present
+
+- name: pip install boto
+  pip:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+      - boto
+      - botocore
+      - boto3
+
+- ec2_instance_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region:           "{{ aws_region }}"
+    filters:
+      instance-state-name: running
+      'tag:type': "{{ config.proxy_type }}"
+      availability-zone: "{{ aws_az }}"
+  register: proxy_instances
+
+- name: Add proxy to dynamic host group
+  add_host:
+    name: "{{ item.tags.Name }}"
+    groupname: gatewayed
+    ansible_ssh_host: "{{ item.private_ip_address }}"
+    ansible_user: centos
+  with_items: "{{ proxy_instances.instances }}"
+
+- name: install haproxy
+  delegate_to: "{{ item.tags.Name }}"
+  become: yes
+  yum: name=haproxy state=present
+  with_items: "{{ proxy_instances.instances }}"
+
+- name: install libselinux-python
+  delegate_to: "{{ item.tags.Name }}"
+  become: yes
+  yum: name=libselinux-python state=present
+  with_items: "{{ proxy_instances.instances }}"
+
+- name: start haproxy
+  delegate_to: "{{ item.tags.Name }}"
+  become: yes
+  service: name=haproxy state=started
+  with_items: "{{ proxy_instances.instances }}"
+
+- ec2_instance_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region:           "{{ aws_region }}"
+    filters:
+       instance-state-name: running
+       'tag:server_type': "{{config.target_server_type}}"
+  register: target_proxy_instances
+
+- name: Copy haproxy config
+  delegate_to: "{{ item.tags.Name }}"
+  become: yes
+  template:
+      src=haproxy.cfg.j2
+      dest=/etc/haproxy/haproxy.cfg
+      mode=755
+  with_items: "{{ proxy_instances.instances }}"
+
+- name: Set Selinux to allow outbound access
+  seport: ports=9050-9055 proto=tcp setype=http_port_t state=present
+  become: yes
+  delegate_to: "{{ item.tags.Name }}"
+  with_items: "{{ proxy_instances.instances }}"
+
+- ec2_instance_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region:           "{{ aws_region }}"
+    filters:
+       instance-state-name: running
+       'tag:role': 'build-server'
+  register: bahmni_server_instances
+
+- name: Restart haproxy
+  delegate_to: "{{ item.tags.Name }}"
+  become: yes
+  service: name=haproxy state=reloaded
+  with_items: "{{ proxy_instances.instances }}"
