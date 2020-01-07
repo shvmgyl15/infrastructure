@@ -16,27 +16,42 @@ Mac :
 
 Configure aws-cli. Use AWS credentials provided in the aws_credentials.yml
 ```aws configure```
+```AWS Access Key ID: <AWS ACCESS KEY>```
+```AWS Secret Access Key: <AWS Secret Access Key>```
+```Default region name: <ap-south-1>```
+```Default output format: <json>```
 
 How to encrypt and decrypt Ansible vars:
-    Make sure you have vault key present on the ansible.cfg path.
+    Make sure you have vault key present on the ansible.cfg path (~/.keys/projecteka_secret).
     ```ansible-vault encrypt vars/vars.yml```
     ```ansible-vault decrypt vars/vars.yml```
 
-Comamnd to provision basic infrastructure:
+Add vars/ec2_key.pem key to connect to AWS:
+
+   ```eval "$(ssh-agent -s)"```
+   ```ansible-vault decrypt group_vars/bahmni_launch_key.pem```
+   ```ssh-add group_vars/bahmni_launch_key.pem```
+
+To create a new VPC and basic infrastructure, the following command is executed:
 
     ```ansible-playbook -i inventory/ vpc.yml -vvv```
 
-Comamnd to provision ec2 proxy instance:
+To create a new ec2 Instance, the following command is executed:
 
-    ```ansible-playbook -i inventory/ec2.py provision.yml -t proxy  -vvvv```
+    ```ansible-playbook -i inventory/ create_instance.yml  -vvv```
 
-Comamnd to provision ec2 docker instance:
+To provision a ec2 proxy Instance, the following command is executed
 
-     ```ansible-playbook -i inventory/ provision.yml -t docker-provision  -vvvv```
+    ```ansible-playbook -i inventory/ec2.py provision.yml -t proxy  -vvv```
 
-Extravars for ha-proxy configuration:
+To provision a ec2 docker Instance, the following command is executed:
 
-    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=censent-managaer-dev docker_host=172.16.2.27 https_port=9051" -vvvv```
+     ```ansible-playbook -i inventory/ provision.yml -t docker-provision  -vvv```
+
+Update Ha-proxy configuration and add container dns:
+
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=consent-manager-dev docker_host=172.16.2.27 https_port=9051" -vvvv```
+
 
 
 
