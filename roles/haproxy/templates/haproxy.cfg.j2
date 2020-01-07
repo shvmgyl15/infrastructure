@@ -28,9 +28,11 @@ frontend http_80_frontend
     acl {{ h.tags.Name }} hdr(host) -i {{ h.tags.Name }}.projecteka.in
     use_backend {{h.tags.Name}} if { hdr(host) -i {{ h.tags.Name }}.projecteka.in }
    {% endfor %}
+   #docker container haproxy config frontend
 
 {% for h in target_proxy_instances.instances %}
 backend {{ h.tags.Name }}
   mode http
   server {{ h.tags.Name }} {{ h.private_ip_address }}:9051
 {% endfor %}
+#docker container haproxy config backend

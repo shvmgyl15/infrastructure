@@ -1,0 +1,25 @@
+---
+
+- name: insert frontend configuration in haproxy config
+  blockinfile:
+      dest: /etc/haproxy/haproxy.cfg
+      marker: "#<!-- {mark} ANSIBLE MANAGED BLOCK docker items {{ container_name}} frontend proxy config -->"
+      insertafter: "#docker container haproxy config frontend"
+      state: present
+      block: |+1
+        acl {{ container_name }} hdr(host) -i {{ container_name }}.projecteka.in
+        use_backend {{container_name}} if { hdr(host) -i {{ container_name }}.projecteka.in }
+
+- name: insert backend configuration in haproxy config
+  blockinfile:
+      dest: /etc/haproxy/haproxy.cfg
+      marker: "#<!-- {mark} ANSIBLE MANAGED BLOCK docker items {{ container_name}}  backend proxy config -->"
+      insertafter: "#docker container haproxy config backend"
+      state: present
+      block: |+1
+       backend {{ container_name }}
+       mode http
+       server {{ container_name }} {{ docker_host }}:{{ https_port }}
+
+- name: Restart haproxy
+  service: name=haproxy state=reloaded
