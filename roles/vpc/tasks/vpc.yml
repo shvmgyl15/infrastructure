@@ -1,6 +1,6 @@
 ---
 
-- name: create a VPC with dedicated tenancy and a couple of tags
+- name: create a VPC with tags
   ec2_vpc_net:
     name: "ncg-{{ env_name }}-vpc-{{aws_region}}"
     cidr_block: "{{ vpc_cidr_block }}"
@@ -8,7 +8,7 @@
     tags:
       Environment: "{{ env_name }}"
       Name: "{{ env_name }}-vpc-{{aws_region}}"
-    tenancy: default
+    tenancy: "{{ VpcInstanceTenancy }}"
   register: vpc_result
 
 - name: Create public subnet
@@ -30,7 +30,6 @@
     az: "{{ aws_az }}"
     vpc_id: "{{ vpc_result.vpc.id }}"
     cidr: "{{ vpc_subnets.private_cidr }}"
-    map_public: true
     tags:
         Name: "{{ env_name }}_private_subnet"
   register: private_subnet_result
@@ -76,4 +75,3 @@
     routes:
       - dest: '0.0.0.0/0'
         nat_gateway_id: "{{ natgw_result.nat_gateway_id }}"
-

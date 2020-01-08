@@ -1,4 +1,4 @@
 ---
 # defaults file for ec2
 instance_key: "ec2_key"
-instance_source_destination_check: yes
+instance_source_destination_check: "yes"
