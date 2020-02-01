@@ -78,7 +78,11 @@
   shell: "aws route53 list-hosted-zones-by-name --dns-name {{ PublicHostedZone }}"
   register: public_hosted_zone
 
-- set_fact: public_hosted_zone_fact={{public_hosted_zone.stdout |from_json }}
+- name: Print version
+  debug:
+    msg: "Ansible Version: {{ public_hosted_zone.stdout |from_json}}"
+
+- set_fact: public_hosted_zone_fact={{ public_hosted_zone.stdout |from_json }}
 
 - name: A record alias for proxy
   route53:
@@ -95,4 +99,4 @@
     overwrite: true
   when:
     - created_instance.tagged_instances.0.tags.server_type is defined
-    - created_instance.tagged_instances.0.tags.server_type == "public" or "private"
+    - created_instance.tagged_instances.0.tags.server_type == "private"

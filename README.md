@@ -29,8 +29,8 @@ How to encrypt and decrypt Ansible vars:
 Add vars/ec2_key.pem key to connect to AWS:
 
    ```eval "$(ssh-agent -s)"```
-   ```ansible-vault decrypt group_vars/bahmni_launch_key.pem```
-   ```ssh-add group_vars/bahmni_launch_key.pem```
+   ```ansible-vault decrypt group_vars/ec2_key.pem```
+   ```ssh-add group_vars/ec2_key.pem```
 
 To create a new VPC and basic infrastructure, the following command is executed:
 
@@ -42,15 +42,18 @@ To create a new ec2 Instance, the following command is executed:
 
 To provision a ec2 proxy Instance, the following command is executed
 
-    ```ansible-playbook -i inventory/ec2.py provision.yml -t proxy  -vvv```
+    ```ansible-playbook -i inventory/ provision.yml -t proxy  -vvv```
 
 To provision a ec2 docker Instance, the following command is executed:
 
      ```ansible-playbook -i inventory/ provision.yml -t docker-provision  -vvv```
 
-Update Ha-proxy configuration and add container dns:
+Update Ha-proxy configuration to add container dns:
 
-    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=consent-manager-dev docker_host=172.16.2.27 https_port=9051" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=consent-manager-dev docker_host=<dockernode01-IP> https_port=9051" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hip-dev docker_host=<dockernode01-IP> https_port=9052" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hiu-dev docker_host=<dockernode01-IP> https_port=9052" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hook docker_host=<dockernode01-IP> https_port=8555" -vvvv```
 
 
 

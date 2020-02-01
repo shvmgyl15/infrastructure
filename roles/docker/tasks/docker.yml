@@ -57,3 +57,41 @@
     url: https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64
     dest: "{{ docker_compose_path }}"
     mode: 0755
+
+- name: Copy docker_hook and set permission
+  copy:
+    src: docker_hook
+    dest: /home/centos/docker_hook
+    owner: centos
+    group: centos
+    mode: '0755'
+
+- name: Copy deployment script and set permission
+  copy:
+    src: deploy.sh
+    dest: /home/centos/deploy.sh
+    owner: centos
+    group: centos
+    mode: '0755'
+
+- name: Copy docker hook startup script
+  become: yes
+  template:
+      src: hook_startup.j2
+      dest: /home/centos/hook_startup.sh
+      mode: '755'
+
+- name: Copy dockerhook_service and set permission
+  copy:
+    src: dockerhook.service
+    dest: /etc/systemd/system/dockerhook.service
+    owner: root
+    group: root
+    mode: '0755'
+  notify: reload systemd
+    
+- name: Docker_hook is started and enabled at boot
+  service:
+    name: dockerhook
+    enabled: yes
+    state: started

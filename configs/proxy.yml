@@ -1,5 +1,5 @@
 proxy_spec:
-   Tags: {"role": "proxy", "type": "public", "env": "infra"}
+   Tags: {"role": "proxy", "type": "public", "server_type": "public", "env": "infra"}
    StartIndex: 1
    ExactCount: 1
    InstanceType: t2.small

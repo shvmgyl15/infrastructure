@@ -2,7 +2,7 @@
 
 - name: create a VPC with tags
   ec2_vpc_net:
-    name: "ncg-{{ env_name }}-vpc-{{aws_region}}"
+    name: "{{ vpc_name }}"
     cidr_block: "{{ vpc_cidr_block }}"
     region: "{{ aws_region }}"
     tags:
