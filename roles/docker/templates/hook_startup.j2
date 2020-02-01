@@ -8,5 +8,5 @@ DOCKER_HOOK_TOKEN={{DOCKER_HOOK_TOKEN}}
 if [ -f /var/run/docker-hook.pid ]; then
    rm -rf /var/run/docker-hook.pid
 fi
-nohup python $DIRECTORY/docker-hook -t $DOCKER_HOOK_TOKEN -c sh $DIRECTORY/deploy.sh &>> /var/log/dockerhook.log &
+nohup python $DIRECTORY/docker-hook -t $DOCKER_HOOK_TOKEN -c sh $DIRECTORY/deploy.sh >> /var/log/dockerhook.log &
 echo $! > /var/run/docker-hook.pid
