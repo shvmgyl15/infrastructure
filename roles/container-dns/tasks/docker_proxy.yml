@@ -9,7 +9,7 @@
       block: |+1
         acl {{ container_name }} hdr(host) -i {{ container_name }}.projecteka.in
         use_backend {{container_name}} if { hdr(host) -i {{ container_name }}.projecteka.in }
-  when: (container_name == "consent-manager-dev") or (container_name == "hip-dev") or (container_name == "container_name=hook")
+  when: (container_name == "consent-manager-dev") or (container_name == "hip-dev")
 
 - name: insert backend configuration in haproxy config
   blockinfile:
@@ -21,7 +21,7 @@
        backend {{ container_name }}
        mode http
        server {{ container_name }} {{ docker_host }}:{{ https_port }}
-  when: (container_name == "consent-manager-dev") or (container_name == "hip-dev") or (container_name == "container_name=hook")
+  when: (container_name == "consent-manager-dev") or (container_name == "hip-dev")
 
 - name: insert frontend configuration in hiu-dev config
   blockinfile:
@@ -33,6 +33,8 @@
         acl hiu-swagger path_beg /swagger.yaml
         acl hiu-dev path_beg /api
         use_backend hiu-dev if hiu-dev or hiu-swagger
+        acl hiu-ui hdr(host) -i hiu-dev.projecteka.in
+        use_backend hiu-ui if { hdr(host) -i hiu-dev.projecteka.in }
   when: container_name == "hiu-dev"
   
 - name: insert backend configuration in hiu-dev config
@@ -46,6 +48,9 @@
        mode http
        reqrep ^([^\ ]*\ /)api[/]?(.*)     \1\2
        server {{ container_name }} {{ docker_host }}:{{ https_port }}
+       backend hiu-ui
+       mode http
+       server hiu-ui {{ docker_host }}:6000
   when: container_name == "hiu-dev"
 
 - name: insert frontend configuration in hook config

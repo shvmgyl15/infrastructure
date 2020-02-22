@@ -69,15 +69,15 @@
   route53:
     command: create
     zone: "{{ PublicHostedZone }}"
-    record: "{{ item.key }}"
+    record: "{{ item.value['dns-01']['record'] }}"
     type: TXT
     ttl: 3
-    value: "{{ item.value | map('regex_replace', '^(.*)$', '\"\\1\"' ) | list }}"
+    value: "\"{{ item.value['dns-01']['resource_value'] }}\""
     access_key: "{{ aws_access_key }}"
     secret_key: "{{ aws_secret_key }}"
     overwrite: true
     wait: true
-  with_dict: "{{ letsencrypt_data['challenge_data_dns'] | default({}) }}"
+  with_dict: "{{ letsencrypt_data['challenge_data'] | default({}) }}"
 
 - name: receive signed certificate from LetsEncrypt
   acme_certificate:
