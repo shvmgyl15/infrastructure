@@ -27,7 +27,7 @@ frontend http_80_frontend
     #docker container haproxy config http_frontend
 
 frontend https_443_frontend
-    bind *:443 ssl crt /etc/ncg-certs/{{ certs_name }}.pem
+    bind *:443 ssl crt /etc/ncg-certs/*.{{ certs_name }}.pem
     option tcplog
     mode http
    {% for h in target_proxy_instances.instances %}
