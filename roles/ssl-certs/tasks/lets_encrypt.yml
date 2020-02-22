@@ -1,0 +1,123 @@
+- name: install openssl
+  yum: name=openssl state=present
+  become: yes
+
+- name: "create the directory"
+  file:
+    path: "{{ certs_dir }}"
+    state: directory
+    owner: "{{ certs_user }}"
+    mode: 0755
+
+- name: "create the directory"
+  file:
+    path: "{{ account_key_dir }}"
+    owner: "{{ certs_user }}"
+    mode: 0700
+    state: directory
+
+- name: generate the private key
+  openssl_privatekey:
+    path: "{{ certs_dir }}/{{ cert_key_file_name }}"
+    size: 2048
+
+- name: Set the file permission
+  file:
+    path: "{{ certs_dir }}/{{ cert_key_file_name }}"
+    mode: 0600
+
+- name: generate the CSR
+  openssl_csr:
+    path: "{{ certs_dir }}/{{ csr_file_name }}"
+    privatekey_path: "{{ certs_dir }}/{{ cert_key_file_name }}"
+    common_name: "{{ certs_name }}"
+    key_usage: "{{ certs_key }}"
+    subject_alt_name: "DNS:{{ certs_name }}{{ ',DNS:' + ',DNS:'.join(sans) if sans else '' }}"
+  register: csr
+
+- name: Generate the lets encrypt account key
+  openssl_privatekey:
+    path: "{{ account_key_dir }}/{{ account_key_file_name }}"
+    size: 2048
+
+- name: Set file permissions
+  file:
+    path: "{{ account_key_dir }}/{{ account_key_file_name }}"
+    owner: "{{ certs_user }}"
+    mode: 0600
+
+- name: delete existing certificate
+  file:
+    path: "{{ certs_dir }}/{{ cert_file_name }}"
+    state: absent
+  when: csr.changed and csr_status
+
+- name: initiate challange
+  acme_certificate:
+    acme_directory: "{{ acme_url }}"
+    challenge: dns-01
+    account_key: "{{ account_key_dir }}/{{ account_key_file_name }}"
+    csr: "{{ certs_dir }}/{{ csr_file_name }}"
+    dest: "{{ certs_dir }}/{{ cert_file_name }}"
+    account_email: "{{ email }}"
+    remaining_days: "{{ renewal_days }}"
+    acme_version: 2
+    terms_agreed: "{{ agreement }}"
+  register: letsencrypt_data
+
+- name: Create txt record for {{ ec2_tag_Name }}
+  route53:
+    command: create
+    zone: "{{ PublicHostedZone }}"
+    record: "{{ item.key }}"
+    type: TXT
+    ttl: 3
+    value: "{{ item.value | map('regex_replace', '^(.*)$', '\"\\1\"' ) | list }}"
+    access_key: "{{ aws_access_key }}"
+    secret_key: "{{ aws_secret_key }}"
+    overwrite: true
+    wait: true
+  with_dict: "{{ letsencrypt_data['challenge_data_dns'] | default({}) }}"
+
+- name: receive signed certificate from LetsEncrypt
+  acme_certificate:
+    acme_directory: "{{ acme_url }}"
+    challenge: dns-01
+    account_key: "{{ account_key_dir }}/{{ account_key_file_name }}"
+    csr: "{{ certs_dir }}/{{ csr_file_name }}"
+    dest: "{{ certs_dir }}/{{ cert_file_name }}"
+    account_email: "{{ email }}"
+    data: "{{ letsencrypt_data }}"
+    acme_version: 2
+    terms_agreed: "{{ agreement }}"
+
+- name: download the Lets Encrypt intermediate CA
+  get_url:
+    url: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
+    dest: "{{ certs_dir }}/{{ intermediate_cert_file_name }}"
+    mode: 0600
+  when: download_intermediate == true
+
+- name: get content of the certificate
+  command: "cat {{ certs_dir }}/{{ cert_file_name }}"
+  register: certificate_data
+  changed_when: false
+  when: download_intermediate == true
+
+- name: get content of the intermediate CA
+  command: "cat {{ certs_dir }}/{{ intermediate_cert_file_name }}"
+  register: intermediate_cert
+  changed_when: false
+  when: download_intermediate == true
+
+- name: create a file with the certificate and intermediate CA
+  copy:
+    content: "{{ certificate_data['stdout'] + '\n' + intermediate_cert['stdout'] + '\n' }}"
+    dest: "{{ certs_dir }}/{{ pem_file_name }}"
+  when: download_intermediate == true
+
+- name: Create PEM file
+  shell: cat {{ certs_dir }}/{{ certs_name }}.crt {{ certs_dir }}/{{ certs_name }}.key > {{ certs_dir }}/{{ certs_name }}.pem
+  args:
+    executable: /bin/bash
+  become: yes

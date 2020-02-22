@@ -50,10 +50,10 @@ To provision a ec2 docker Instance, the following command is executed:
 
 Update Ha-proxy configuration to add container dns:
 
-    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=consent-manager-dev docker_host=<dockernode01-IP> https_port=9051" -vvvv```
-    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hip-dev docker_host=<dockernode01-IP> https_port=9052" -vvvv```
-    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hiu-dev docker_host=<dockernode01-IP> https_port=9052" -vvvv```
-    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hook docker_host=<dockernode01-IP> https_port=8555" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=consent-manager-dev docker_host=172.16.2.27 https_port=9051" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hip-dev docker_host=172.16.2.27 https_port=9052" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hiu-dev docker_host=172.16.2.27 https_port=9053" -vvvv```
+    ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hook docker_host=172.16.2.27 https_port=8555" -vvvv```
 
 
 

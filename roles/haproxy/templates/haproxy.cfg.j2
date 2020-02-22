@@ -24,7 +24,12 @@ defaults
 frontend http_80_frontend
     bind *:80
     mode http
+    #docker container haproxy config http_frontend
 
+frontend https_443_frontend
+    bind *:443 ssl crt /etc/ncg-certs/{{ certs_name }}.pem
+    option tcplog
+    mode http
    {% for h in target_proxy_instances.instances %}
     acl {{ h.tags.Name }} hdr(host) -i {{ h.tags.Name }}.projecteka.in
     use_backend {{h.tags.Name}} if { hdr(host) -i {{ h.tags.Name }}.projecteka.in }
