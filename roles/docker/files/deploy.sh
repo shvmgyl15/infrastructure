@@ -27,6 +27,12 @@ echo "$REPO_NAME"
 
 /usr/bin/docker-compose -f $DIRECTORY/docker-compose-client-registry.yml up -d
 
+elif [[ "$REPO_NAME" == "gateway"  ]]; then
+
+echo "$REPO_NAME"
+
+/usr/bin/docker-compose -f $DIRECTORY/docker-compose-gateway.yml up -d
+
 else
    echo "not matched"
 fi
