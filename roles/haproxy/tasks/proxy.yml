@@ -77,15 +77,6 @@
   delegate_to: "{{ item.tags.Name }}"
   with_items: "{{ proxy_instances.instances }}"
 
-- ec2_instance_info:
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
-    region:           "{{ aws_region }}"
-    filters:
-       instance-state-name: running
-       'tag:role': 'build-server'
-  register: bahmni_server_instances
-
 - name: Restart haproxy
   delegate_to: "{{ item.tags.Name }}"
   become: yes

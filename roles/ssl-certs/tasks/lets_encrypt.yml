@@ -19,7 +19,7 @@
 - name: generate the private key
   openssl_privatekey:
     path: "{{ certs_dir }}/{{ cert_key_file_name }}"
-    size: 2048
+    size: 4096
 
 - name: Set the file permission
   file:
@@ -38,7 +38,7 @@
 - name: Generate the lets encrypt account key
   openssl_privatekey:
     path: "{{ account_key_dir }}/{{ account_key_file_name }}"
-    size: 2048
+    size: 4096
 
 - name: Set file permissions
   file:
@@ -65,19 +65,62 @@
     terms_agreed: "{{ agreement }}"
   register: letsencrypt_data
 
-- name: Create txt record for {{ ec2_tag_Name }}
+- name: show dictionary
+  debug:
+    msg: "{{ item.value['dns-01']['record'] }}"
+  with_dict: "{{ letsencrypt_data['challenge_data'] | default({}) }}"
+
+- name: Set dns challenge facts
+  when: letsencrypt_data is changed
+  block:
+    - name: Set dns_challenge_record fact
+      set_fact:
+        dns_challenge_record: "{{ letsencrypt_data.challenge_data['ncg-dev.projecteka.in']['dns-01'].record }}"
+    - name: Set dns_challenge_record fact
+      set_fact:
+        dns_challenge_value: "{{ letsencrypt_data.challenge_data['ncg-dev.projecteka.in']['dns-01'].resource_value }}"
+
+- name: Get hosted zone id
+  command: |
+    aws route53 list-hosted-zones-by-name \
+    --dns-name "{{ PublicHostedZone }}" \
+    --query "HostedZones[0].Id" \
+    --region {{ region }}
+  register: hosted_zones_cmd
+
+- name: Create dns-challenge.json file
+  template:
+    src: dns-challenge.json.j2
+    dest: /tmp/dns-challenge.json
+
+- name: Set record
+  command: |
+    aws route53 change-resource-record-sets \
+       --hosted-zone-id "{{ hosted_zones_cmd.stdout }}" \
+       --change-batch file:///tmp/dns-challenge.json \
+       --region {{ region }}
+  register: record_set_cmd
+
+- name: Wait for record change
+  command: |
+    aws route53 wait resource-record-sets-changed \
+      --id "{{ (record_set_cmd.stdout|from_json).ChangeInfo.Id }}"
+
+- name: create the DNS records for the challenge
   route53:
     command: create
-    zone: "{{ PublicHostedZone }}"
-    record: "{{ item.value['dns-01']['record'] }}"
+    zone: "{{ ler53_route_53_domain }}"
+    record: "{{ ler53_item.value['dns-01']['record'] }}"
     type: TXT
-    ttl: 3
-    value: "\"{{ item.value['dns-01']['resource_value'] }}\""
-    access_key: "{{ aws_access_key }}"
-    secret_key: "{{ aws_secret_key }}"
-    overwrite: true
-    wait: true
-  with_dict: "{{ letsencrypt_data['challenge_data'] | default({}) }}"
+    ttl: 5
+    value: "\"{{ ler53_item.value['dns-01']['resource_value'] }}\""
+    aws_access_key: "{{ ler53_aws_access_key }}"
+    aws_secret_key: "{{ ler53_aws_secret_key }}"
+    overwrite: yes
+    wait: yes
+  with_dict: "{{ lets_encrypt_challenge['challenge_data'] | default({}) }}"
+  loop_control:
+    loop_var: ler53_item
 
 - name: receive signed certificate from LetsEncrypt
   acme_certificate:
@@ -121,3 +164,7 @@
   args:
     executable: /bin/bash
   become: yes
+
+- name: Restart haproxy
+  become: yes
+  service: name=haproxy state=reloaded

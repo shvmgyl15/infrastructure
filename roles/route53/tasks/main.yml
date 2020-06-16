@@ -1,0 +1,6 @@
+---
+
+- include: add-dns.yml
+  vars:
+    - domain_dnsname: "{{ dnsname }}"
+  tags: add-dns-entry
