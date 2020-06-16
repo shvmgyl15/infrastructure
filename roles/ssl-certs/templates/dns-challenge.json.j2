@@ -1,0 +1,12 @@
+{
+  "Comment": "dns-challenge.json",
+  "Changes": [ {
+     "Action": "CREATE",
+     "ResourceRecordSet": {
+        "Name": "{{ letsencrypt_data.challenge_data['ncg-dev.projecteka.in']['dns-01'].record }}",
+            "Type": "TXT",
+             "TTL": 600,
+          "ResourceRecords": [{"Value": "\"{{ letsencrypt_data.challenge_data['ncg-dev.projecteka.in']['dns-01'].resource_value }}\""}]
+              }}
+]
+}

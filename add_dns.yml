@@ -1,0 +1,23 @@
+- hosts: tag_role_proxy
+  become: yes
+  vars:
+   ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -q centos@haproxy.projecteka.in"'
+   ansible_user: centos
+  roles:
+    - route53
+  vars_files:
+    - "vars/secrets.yml"
+    - "vars/cidr_blocks.yml"
+    - "vars/vars.yml"
+
+- hosts: localhost
+  roles:
+    - fetch-facts
+    - route53
+  vars_files:
+    - "vars/secrets.yml"
+    - "vars/cidr_blocks.yml"
+    - "vars/vars.yml"
+    - "configs/instances.yml"
+    - "configs/docker_node.yml"
+    - "configs/proxy.yml"
