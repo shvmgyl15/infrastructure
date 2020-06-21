@@ -1,2 +1,3 @@
-rabbitmq/*.json
+rabbitmq/cm_queues.json
+rabbitmq/gateway_queues.json
 volumes/
