@@ -62,16 +62,19 @@
     account_email: "{{ email }}"
     remaining_days: "{{ renewal_days }}"
     acme_version: 2
-    terms_agreed: "{{ agreement }}"
+    terms_agreed: yes
   register: letsencrypt_data
+
+- debug:
+    var: letsencrypt_data
 
 - name: show dictionary
   debug:
     msg: "{{ item.value['dns-01']['record'] }}"
   with_dict: "{{ letsencrypt_data['challenge_data'] | default({}) }}"
+  when: letsencrypt_data['challenge_data'] is defined
 
 - name: Set dns challenge facts
-  when: letsencrypt_data is changed
   block:
     - name: Set dns_challenge_record fact
       set_fact:
@@ -79,7 +82,7 @@
     - name: Set dns_challenge_record fact
       set_fact:
         dns_challenge_value: "{{ letsencrypt_data.challenge_data['ncg-dev.projecteka.in']['dns-01'].resource_value }}"
-
+  when: letsencrypt_data['challenge_data'] is defined
 - name: Get hosted zone id
   command: |
     aws route53 list-hosted-zones-by-name \
@@ -92,6 +95,7 @@
   template:
     src: dns-challenge.json.j2
     dest: /tmp/dns-challenge.json
+  when: letsencrypt_data['challenge_data'] is defined
 
 - name: Set record
   command: |
@@ -100,11 +104,13 @@
        --change-batch file:///tmp/dns-challenge.json \
        --region {{ region }}
   register: record_set_cmd
+  when: letsencrypt_data['challenge_data'] is defined
 
 - name: Wait for record change
   command: |
     aws route53 wait resource-record-sets-changed \
       --id "{{ (record_set_cmd.stdout|from_json).ChangeInfo.Id }}"
+  when: letsencrypt_data['challenge_data'] is defined
 
 - name: create the DNS records for the challenge
   route53:
@@ -121,6 +127,7 @@
   with_dict: "{{ lets_encrypt_challenge['challenge_data'] | default({}) }}"
   loop_control:
     loop_var: ler53_item
+  when: letsencrypt_data['challenge_data'] is defined
 
 - name: receive signed certificate from LetsEncrypt
   acme_certificate:
@@ -132,7 +139,7 @@
     account_email: "{{ email }}"
     data: "{{ letsencrypt_data }}"
     acme_version: 2
-    terms_agreed: "{{ agreement }}"
+    terms_agreed: yes
 
 - name: download the Lets Encrypt intermediate CA
   get_url:

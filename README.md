@@ -55,6 +55,10 @@ Update Ha-proxy configuration to add container dns:
     ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=hiu-dev docker_host=172.16.2.27 https_port=9053" -vvvv```
     ```ansible-playbook -i inventory/ add_container_dns.yml -e "container_name=consent-manager-dev docker_host=172.16.2.27 https_port=9051" -vvvv```
 
+To renew certififcate:
+
+    ```ansible-playbook -i inventory/ec2.py provision.yml -vvv -t ssl-certs```
+
 
 
 
