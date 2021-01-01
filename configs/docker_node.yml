@@ -1,0 +1,19 @@
+docker_node_env_spec:
+   Tags: {"role": "docker-node", "server_type": "private", "env": "dev" }
+   StartIndex: 1
+   ExactCount: 1
+   InstanceType: t2.small
+   SecurityGroups:
+     - "{{ SecurityGroupIds.dev_private }}"
+   AmiId: "{{ available_amis.docker_node_ami }}"
+   SubnetId: "{{ SubnetIds.dev_private_subnet }}"
+   AssignPublicIp: no
+   InstanceVolumes:
+     - VolumeSpecifications:
+         - volume_size: 100
+           volume_type: gp2
+           device_name: /dev/sda1
+           delete_on_termination: yes
+           FilesystemSpecifications:
+             volume_label: "root"
+           mountpoint: /

@@ -1,0 +1,13 @@
+- hosts: localhost
+  roles:
+    - fetch-facts
+    - ec2
+  vars_files:
+    - "vars/secrets.yml"
+    - "vars/cidr_blocks.yml"
+    - "vars/vars.yml"
+    - "configs/instances.yml"
+    - "configs/docker_node.yml"
+    - "configs/proxy.yml"
+  tags:
+    - create_instance

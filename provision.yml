@@ -1,0 +1,41 @@
+- hosts: tag_role_proxy
+  become: yes
+  vars:
+   ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -q centos@haproxy.projecteka.in"'
+   ansible_user: centos
+  roles:
+    - haproxy
+  vars_files:
+    - "vars/vars.yml"
+    - "vars/secrets.yml"
+    - "vars/cidr_blocks.yml"
+  tags:
+    - proxy
+
+- hosts: tag_role_proxy
+  become: yes
+  vars:
+   ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -q centos@haproxy.projecteka.in"'
+   ansible_user: centos
+  roles:
+    - ssl-certs
+  vars_files:
+    - "vars/vars.yml"
+    - "vars/secrets.yml"
+    - "vars/cidr_blocks.yml"
+  tags:
+    - ssl-certs
+
+- hosts: tag_role_docker_node
+  become: yes
+  vars:
+   ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -q centos@haproxy.projecteka.in"'
+   ansible_user: centos
+  roles:
+    - docker
+  vars_files:
+    - "vars/vars.yml"
+    - "vars/secrets.yml"
+    - "vars/cidr_blocks.yml"
+  tags:
+    - docker-provision

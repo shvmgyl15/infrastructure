@@ -1,0 +1,77 @@
+---
+
+- name: create a VPC with tags
+  ec2_vpc_net:
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_cidr_block }}"
+    region: "{{ aws_region }}"
+    tags:
+      Environment: "{{ env_name }}"
+      Name: "{{ env_name }}-vpc-{{aws_region}}"
+    tenancy: "{{ VpcInstanceTenancy }}"
+  register: vpc_result
+
+- name: Create public subnet
+  ec2_vpc_subnet:
+    region: "{{ aws_region }}"
+    state: present
+    az: "{{ aws_az }}"
+    vpc_id: "{{ vpc_result.vpc.id }}"
+    cidr: "{{ vpc_subnets.public_cidr }}"
+    map_public: true
+    tags:
+        Name: "{{ env_name }}_public_subnet"
+  register: public_subnet_result
+
+- name: Create private subnet
+  ec2_vpc_subnet:
+    region: "{{ aws_region }}"
+    state: present
+    az: "{{ aws_az }}"
+    vpc_id: "{{ vpc_result.vpc.id }}"
+    cidr: "{{ vpc_subnets.private_cidr }}"
+    tags:
+        Name: "{{ env_name }}_private_subnet"
+  register: private_subnet_result
+
+- name: Create igw 
+  ec2_vpc_igw:
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc_result.vpc.id }}"
+    state: present
+    tags:
+        Name: "{{ env_name }}_igw"  
+  register: igw_result
+
+- name: Create new nat gateway.
+  ec2_vpc_nat_gateway:
+    state: present
+    subnet_id: "{{ public_subnet_result.subnet.id }}"
+    wait: yes
+    region: "{{ aws_region }}"
+    if_exist_do_not_create: true
+    release_eip:            true
+  register: natgw_result
+    
+- name: creating public subnet route table
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: "{{ env_name }}_public_rt"
+    subnets: "{{ vpc_subnets.public_cidr }}"
+    routes:
+      - dest: '0.0.0.0/0'
+        gateway_id: "{{ igw_result.gateway_id }}"
+  register: public_rt_result
+
+- name: creating private subnet route table
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc_result.vpc.id }}"
+    region: "{{ aws_region }}"
+    subnets: "{{ vpc_subnets.private_cidr }}"
+    tags:
+      Name: "{{ env_name }}_private_rt"
+    routes:
+      - dest: '0.0.0.0/0'
+        nat_gateway_id: "{{ natgw_result.nat_gateway_id }}"

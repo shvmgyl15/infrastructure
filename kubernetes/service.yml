@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-dev
+  namespace: consent-manager
+  labels:
+    app: rabbitmq-dev
+  annotations:
+    service.beta.kubernetes.io/do-loadbalancer-algorithm: "least_connections"
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true" 
+spec:
+  selector:
+    app: rabbitmq-dev
+  sessionAffinity: ClientIP
+  type: LoadBalancer
+  # sessionAffinityConfig:
+  #   clientIP:
+  #     timeoutSeconds: 600
+  ports:
+    - name: http
+      port: 5672

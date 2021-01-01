@@ -1,0 +1,13 @@
+[Unit]
+Description=dockerhook
+Wants=network-online.target
+After=network.target network-online.target
+Before=shutdown.target poweroff.target halt.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /home/centos/hook_startup.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=shutdown.target poweroff.target halt.target multi-user.target
