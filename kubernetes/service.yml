@@ -11,7 +11,7 @@ metadata:
 spec:
   selector:
     app: rabbitmq-dev
-  sessionAffinity: ClientIP
+    #  sessionAffinity: ClientIP
   type: LoadBalancer
   # sessionAffinityConfig:
   #   clientIP:
