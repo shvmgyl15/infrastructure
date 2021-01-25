@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: rabbitmq-dev
-          image: devinfysurveyappregistry.azurecr.io/rabbitmq:latest
+          image: 413379950444.dkr.ecr.us-east-2.amazonaws.com/vaccination/rabbitmq:latest
           ports:
               - containerPort: 5672
           lifecycle:

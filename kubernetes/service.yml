@@ -5,9 +5,9 @@ metadata:
   namespace: consent-manager
   labels:
     app: rabbitmq-dev
-  annotations:
-    service.beta.kubernetes.io/do-loadbalancer-algorithm: "least_connections"
-    service.beta.kubernetes.io/azure-load-balancer-internal: "true" 
+    #  annotations:
+    #    service.beta.kubernetes.io/do-loadbalancer-algorithm: "least_connections"
+    #    service.beta.kubernetes.io/azure-load-balancer-internal: "true" 
 spec:
   selector:
     app: rabbitmq-dev
